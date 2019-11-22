@@ -33,15 +33,19 @@ app.get("/", (req, res) => {
 //GET /posts  ====> Returns array of posts
 
 app.get("/posts", (req, res) => {
-  res.send(posts);
+  try {
+    res.send({ status: 200, data: posts });
+  } catch {
+    res.send({ status: 400, error: "Not found" });
+  }
 });
 
 //GET /posts/:id  ===> Returns sepecifc post object by id
 
 app.get("/posts/:id", (req, res) => {
   const post = posts.find(p => p.id === parseInt(req.params.id));
-  if (!post) res.status(404).send("post not found for Given ID");
-  res.send(post);
+  if (!post) return res.send({ status: 400, error: "Not found" });
+  res.send({ status: 200, data: post });
 });
 
 //POST /posts [title, body]  ====> Returns newly added post object
@@ -54,7 +58,8 @@ app.post("/posts", (req, res) => {
 
   const result = Joi.validate(req.body, schema);
   if (result.error) {
-    res.status(404).send(result.error.details[0].message);
+    res.send({ status: 404, error: result.error.details[0].message });
+    // res.status(404).send(result.error.details[0].message);
     return;
   }
   const post = {
@@ -63,14 +68,14 @@ app.post("/posts", (req, res) => {
     body: req.body.body
   };
   posts.push(post);
-  res.send(post);
+  res.send({ status: 200, data: post });
 });
 
 //PUT /posts/:id [title, body]   ====> It should update specific post's id and body
 
 app.put("/posts/:id", (req, res) => {
   const post = posts.find(p => p.id === parseInt(req.params.id));
-  if (!post) res.status(404).send("post not found for Given ID");
+  if (!post) return res.send({ status: 400, error: "Not found" });
 
   const schema = {
     title: Joi.string().required(),
@@ -79,31 +84,31 @@ app.put("/posts/:id", (req, res) => {
 
   const result = Joi.validate(req.body, schema);
   if (result.error) {
-    res.status(404).send(result.error.details[0].message);
+    res.send({ status: 404, error: result.error.details[0].message });
     return;
   }
 
   post.title = req.body.title;
   post.body = req.body.body;
-  res.send(post);
+  res.send({ status: 200, data: post });
 });
 
 //DELETE /posts/:id     ===> It should delete specific post by id
 
 app.delete("/posts/:id", (req, res) => {
   const post = posts.find(p => p.id === parseInt(req.params.id));
-  if (!post) res.status(404).send("post not found for Given ID");
+  if (!post) return res.send({ status: 400, error: "Not found" });
 
   const index = posts.indexOf(post);
   posts.splice(index, 1);
-  res.send(post);
+  res.send({ status: 200, msg: " Deleted Post" });
 });
 
 //DELETE /posts   ===> It should remove all posts
 
 app.delete("/posts", (req, res) => {
-  posts = "";
-  res.send("delete All Posts");
+  posts = [];
+  res.send({ status: 200, msg: " All Posts Deleted" });
 });
 
 //PORT
